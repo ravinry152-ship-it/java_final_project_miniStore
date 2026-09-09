@@ -1,12 +1,13 @@
 package com.ecommerce.webapi.service.impl;
 
 import com.ecommerce.webapi.dto.request.UserRequest;
-import com.ecommerce.webapi.dto.response.StoreNameResponse;
+import com.ecommerce.webapi.dto.response.UserResponse;
 import com.ecommerce.webapi.model.User;
 import com.ecommerce.webapi.repository.UserRepository;
 import com.ecommerce.webapi.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,13 +19,14 @@ import java.util.stream.Collectors;
 public class UserImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public String Create(UserRequest userRequest) {
         User user = User.builder()
                 .username(userRequest.getUserName())
                 .email(userRequest.getEmail())
-                .password(userRequest.getPassword())
+                .password(passwordEncoder.encode(userRequest.getPassword()))
                 .build();
         userRepository.save(user);
         log.info("User created successfully: {}", user.getEmail());
@@ -38,7 +40,10 @@ public class UserImpl implements UserService {
 
         user.setUsername(userRequest.getUserName());
         user.setEmail(userRequest.getEmail());
-        user.setPassword(userRequest.getPassword());
+
+        if (userRequest.getPassword() != null && !userRequest.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+        }
 
         userRepository.save(user);
         log.info("User updated successfully: {}", id);
@@ -56,25 +61,27 @@ public class UserImpl implements UserService {
     }
 
     @Override
-    public StoreNameResponse findByID(Long id) {
+    public UserResponse findByID(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-        return StoreNameResponse.builder()
-                .id(user.getId())
-                .userName(user.getUsername())
-                .storeName(user.getStore() != null ? user.getStore().getStoreName() : null)
-                .build();
+        UserResponse response = new UserResponse();
+        response.setUserName(user.getUsername());
+        response.setEmail(user.getEmail());
+        response.setPassword(user.getPassword());
+        return response;
     }
 
     @Override
-    public List<StoreNameResponse> findAll() {
+    public List<UserResponse> findAll() {
         return userRepository.findAll().stream()
-                .map(user -> StoreNameResponse.builder()
-                        .id(user.getId())
-                        .userName(user.getUsername())
-                        .storeName(user.getStore() != null ? user.getStore().getStoreName() : null)
-                        .build())
+                .map(user -> {
+                    UserResponse response = new UserResponse();
+                    response.setUserName(user.getUsername());
+                    response.setEmail(user.getEmail());
+                    response.setPassword(user.getPassword());
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 }

@@ -23,6 +23,7 @@ public class StoreName {
             unique = true,
             nullable = false
     )
+    @ToString.Exclude // Prevents infinite loop during log printing
     private User user;
 
     private String storeName;

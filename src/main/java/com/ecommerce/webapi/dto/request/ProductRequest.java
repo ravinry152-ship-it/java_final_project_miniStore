@@ -1,6 +1,4 @@
 package com.ecommerce.webapi.dto.request;
-
-import com.ecommerce.webapi.model.StoreName;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,7 +8,6 @@ import lombok.ToString;
 @Setter
 @ToString
 public class ProductRequest {
-    private StoreName storeName;
 
     private Long category;
 

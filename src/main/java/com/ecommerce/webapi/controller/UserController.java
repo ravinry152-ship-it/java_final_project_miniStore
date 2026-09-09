@@ -1,6 +1,6 @@
 package com.ecommerce.webapi.controller;
 import com.ecommerce.webapi.dto.request.UserRequest;
-import com.ecommerce.webapi.dto.response.StoreNameResponse;
+import com.ecommerce.webapi.dto.response.UserResponse;
 import com.ecommerce.webapi.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 @Slf4j
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -31,12 +31,12 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public StoreNameResponse findByID(@PathVariable Long id) {
+    public UserResponse findByID(@PathVariable Long id) {
         return userService.findByID(id);
     }
 
     @GetMapping
-    public List<StoreNameResponse> findAll() {
+    public List<UserResponse> findAll() {
         return userService.findAll();
     }
 }

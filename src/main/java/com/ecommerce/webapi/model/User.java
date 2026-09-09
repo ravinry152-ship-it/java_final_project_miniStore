@@ -1,6 +1,13 @@
 package com.ecommerce.webapi.model;
+
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.List;
 
 @Getter
 @Setter
@@ -9,8 +16,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "\"user\"") // បន្ថែមចំណុចនេះដើម្បីគ្របដណ្តប់ពាក្យ user
-public class User {
+@Table(name = "\"user\"")
+public class User implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,4 +31,46 @@ public class User {
 
     @OneToOne(mappedBy = "user")
     private StoreName store;
+
+    // =========================
+    // Spring Security
+    // =========================
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(
+                new SimpleGrantedAuthority("ROLE_USER")
+        );
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    // Login identity = EMAIL
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }
