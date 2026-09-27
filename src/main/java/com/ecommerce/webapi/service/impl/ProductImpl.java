@@ -118,6 +118,24 @@ public class ProductImpl implements ProductService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<ProductResponse> findByCategoryId(Long categoryId) {
+        List<Product> products = productRepository.findByCategory_Id(categoryId);
+        return products.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProductResponse> findByProductNameContainingIgnoreCase(String productName) {
+        return List.of();
+    }
+
+    @Override
+    public List<ProductResponse> findByName(String trim) {
+        return List.of();
+    }
+
     private ProductResponse mapToResponse(Product product) {
         return ProductResponse.builder()
                 .id(product.getId())
@@ -125,7 +143,9 @@ public class ProductImpl implements ProductService {
                 .categoryId(product.getCategory() != null ? product.getCategory().getId() : null)
                 .productName(product.getProductName())
                 .price(product.getPrice())
-                .productImage(product.getProductImage())
+                .productImage(
+                        "http://localhost:8000/media/" + product.getProductImage()
+                )
                 .stock(product.getStock())
                 .build();
     }

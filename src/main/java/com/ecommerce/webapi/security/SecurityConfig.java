@@ -36,6 +36,12 @@ public class SecurityConfig {
                         )
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/media/**", "/media/product/**").permitAll()
+
+                        // បើកសិទ្ធិទាំង POST និង GET សម្រាប់ Orders (ត្រូវផ្ទៀងផ្ទាត់ Token)
+                        .requestMatchers("/api/orders/**", "/api/v1/orders/**").authenticated()
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/store-name/**").permitAll()
@@ -44,8 +50,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/products", "/api/v1/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/products", "/api/v1/products/**").permitAll()
 
-
-                        // រាល់សំណើផ្សេងទៀត (រួមទាំង POST /store-name) ត្រូវតែ Authenticated
                         .anyRequest().authenticated()
                 )
 
@@ -58,7 +62,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(List.of("http://localhost:5174"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

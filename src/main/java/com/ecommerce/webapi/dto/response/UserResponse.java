@@ -9,10 +9,10 @@ import lombok.ToString;
 @Setter
 @ToString
 public class UserResponse {
+    private Long id;
+
     @JsonProperty("user_name")
     private String userName;
-    @JsonProperty("email")
+
     private String email;
-    @JsonProperty("password")
-    private String password;
 }

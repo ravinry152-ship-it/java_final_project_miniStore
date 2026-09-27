@@ -32,9 +32,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContextHolderStrategy();
 
     @Override
-    protected boolean shouldNotFilter(@Nonnull HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
-        return path.startsWith("/api/v1/auth/");
+    protected boolean shouldNotFilter(
+            @Nonnull HttpServletRequest request
+    ) {
+
+        String path = request.getServletPath();
+
+        return path.equals("/api/v1/auth/signup")
+                || path.equals("/api/v1/auth/login");
     }
 
     @Override
@@ -44,52 +49,74 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @Nonnull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        String authHeader = request.getHeader("Authorization");
 
-        // =========================================
-        // 1. No Authorization header
-        // =========================================
+        System.out.println("=================================");
+        System.out.println("JWT FILTER");
+        System.out.println("Request: " + request.getMethod() + " " + request.getRequestURI());
+        System.out.println("Authorization exists: " + (authHeader != null));
+
+        // No Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+
+            System.out.println("No Bearer token");
+
             filterChain.doFilter(request, response);
             return;
         }
 
-        // =========================================
-        // 2. Get JWT
-        // =========================================
-        final String jwt = authHeader.substring(7).trim();
+        String jwt = authHeader.substring(7).trim();
 
-        // Empty token
         if (jwt.isEmpty()) {
+
+            System.out.println("JWT is empty");
+
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
 
-            // =========================================
-            // 3. Extract username
-            // =========================================
-            final String userEmail = jwtService.extractUsername(jwt);
+            // =========================
+            // Extract username/email
+            // =========================
 
-            // =========================================
-            // 4. Check SecurityContext
-            // =========================================
+            String userEmail = jwtService.extractUsername(jwt);
+
+            System.out.println("JWT username/email: " + userEmail);
+
+            // =========================
+            // Check SecurityContext
+            // =========================
+
             if (userEmail != null &&
                     securityContextHolderStrategy
                             .getContext()
                             .getAuthentication() == null) {
 
-                // =========================================
-                // 5. Load user
-                // =========================================
+                // =========================
+                // Load User
+                // =========================
+
                 UserDetails userDetails =
                         userDetailsService.loadUserByUsername(userEmail);
 
-                // =========================================
-                // 6. Validate JWT
-                // =========================================
-                if (jwtService.isTokenValid(jwt, userDetails)) {
+                System.out.println(
+                        "User found: " + userDetails.getUsername()
+                );
+
+                // =========================
+                // Validate JWT
+                // =========================
+
+                boolean valid =
+                        jwtService.isTokenValid(jwt, userDetails);
+
+                System.out.println(
+                        "JWT valid: " + valid
+                );
+
+                if (valid) {
 
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
@@ -104,22 +131,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
 
                     SecurityContext context =
-                            securityContextHolderStrategy.createEmptyContext();
+                            securityContextHolderStrategy
+                                    .createEmptyContext();
 
                     context.setAuthentication(authToken);
 
                     securityContextHolderStrategy.setContext(context);
+
+                    System.out.println(
+                            "Authentication SUCCESS"
+                    );
                 }
             }
 
-            // Continue request
             filterChain.doFilter(request, response);
 
         } catch (ExpiredJwtException e) {
 
-            // =========================================
-            // JWT EXPIRED
-            // =========================================
+            System.out.println("JWT ERROR: EXPIRED");
+            e.printStackTrace();
+
             sendUnauthorizedResponse(
                     response,
                     "JWT token has expired"
@@ -127,9 +158,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (MalformedJwtException e) {
 
-            // =========================================
-            // JWT MALFORMED
-            // =========================================
+            System.out.println("JWT ERROR: MALFORMED");
+            e.printStackTrace();
+
             sendUnauthorizedResponse(
                     response,
                     "Invalid JWT token"
@@ -137,9 +168,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (SignatureException e) {
 
-            // =========================================
-            // INVALID SIGNATURE
-            // =========================================
+            System.out.println("JWT ERROR: INVALID SIGNATURE");
+            e.printStackTrace();
+
             sendUnauthorizedResponse(
                     response,
                     "Invalid JWT signature"
@@ -147,12 +178,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (Exception e) {
 
-            // =========================================
-            // OTHER JWT / AUTH ERROR
-            // =========================================
+            System.out.println("JWT ERROR: OTHER");
+            e.printStackTrace();
+
             sendUnauthorizedResponse(
                     response,
-                    "Authentication failed"
+                    "Authentication failed: "
+                            + e.getClass().getSimpleName()
             );
         }
     }
@@ -166,7 +198,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setStatus(
+                HttpServletResponse.SC_UNAUTHORIZED
+        );
+
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 

@@ -9,8 +9,19 @@ import java.util.List;
 public interface ProductService {
 
     String Create(ProductRequest productRequest);
+
     String update(Long id, ProductRequest productRequest);
+
     String delete(Long id);
+
     ProductResponse findByID(Long id);
+
     List<ProductResponse> findAll();
+
+    // Get products by category
+    List<ProductResponse> findByCategoryId(Long categoryId);
+
+    List<ProductResponse> findByProductNameContainingIgnoreCase(String productName);
+
+    List<ProductResponse> findByName(String trim);
 }

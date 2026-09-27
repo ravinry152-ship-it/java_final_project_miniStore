@@ -35,7 +35,7 @@ public class AuthImpl implements AuthService {
         }
 
         User user = new User();
-        user.setUsername(request.getUsername());
+        user.setName(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
@@ -75,6 +75,16 @@ public class AuthImpl implements AuthService {
 
     @Override
     public UserResponse getUserProfileByEmail(String email) {
-        return null;
+        // ១. ស្វែងរក User ក្នុង Database តាមរយៈ Email
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+        // ២. បង្កើត UserResponse Object និងប្រើ Setter ដើម្បីបញ្ចូលតម្លៃ
+        UserResponse response = new UserResponse();
+        response.setId(user.getId());          // <--- បន្ថែមบรรทัดនេះដើម្បីយក ID
+        response.setUserName(user.getName());
+        response.setEmail(user.getEmail());
+
+        return response;
     }
 }
